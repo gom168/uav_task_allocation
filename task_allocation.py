@@ -20,7 +20,7 @@ DESTROYED_COLOR = (50, 50, 50)  # Dark grey for destroyed units
 BATTLEFIELD_COLOR = (0, 150, 0)  # Green for battlefield area
 
 FONT_SIZE_SMALL = 20
-FONT_SIZE_NORMAL = 24``
+FONT_SIZE_NORMAL = 24
 FONT_SIZE_LARGE = 36
 
 # Default image paths (can be customized)
