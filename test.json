@@ -1,0 +1,73 @@
+{
+    "red_uavs": {
+        "interceptor": 40,
+        "recon": 10,
+        "escort": 0
+    },
+    "red_airport": {
+        "x": 807.1191291159989,
+        "y": 540.0075557531011
+    },
+    "steps": [
+        {
+            "step": 0,
+            "battlefield_coords": {
+                "x": 650.5,
+                "y": 420.3
+            },
+            "blue_uavs": {
+                "ground_attack": 8,
+                "recon": 3,
+                "escort": 2
+            }
+        },
+        {
+            "step": 1,
+            "battlefield_coords": {
+                "x": 720.8,
+                "y": 380.1
+            },
+            "blue_uavs": {
+                "ground_attack": 6,
+                "recon": 2,
+                "escort": 1
+            }
+        },
+        {
+            "step": 2,
+            "battlefield_coords": {
+                "x": 680.2,
+                "y": 450.7
+            },
+            "blue_uavs": {
+                "ground_attack": 4,
+                "recon": 1,
+                "escort": 0
+            }
+        },
+        {
+            "step": 3,
+            "battlefield_coords": {
+                "x": 750.9,
+                "y": 490.4
+            },
+            "blue_uavs": {
+                "ground_attack": 2,
+                "recon": 0,
+                "escort": 0
+            }
+        },
+        {
+            "step": 4,
+            "battlefield_coords": {
+                "x": 710.6,
+                "y": 520.8
+            },
+            "blue_uavs": {
+                "ground_attack": 0,
+                "recon": 0,
+                "escort": 0
+            }
+        }
+    ]
+}
