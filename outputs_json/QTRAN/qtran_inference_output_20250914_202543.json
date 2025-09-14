@@ -1,0 +1,318 @@
+{
+  "episode_info": {
+    "start_time": "2025-09-14T20:25:43.571527",
+    "num_battlefields": 3,
+    "model_path": "save_models/qtran_agent.pth",
+    "config_path": "test.json",
+    "algorithm": "QTRAN",
+    "end_time": "2025-09-14T20:25:43.684740",
+    "total_steps": 3,
+    "total_reward": 1.6666666666666667
+  },
+  "initial_conditions": {
+    "red_uavs": {
+      "interceptor": 40,
+      "recon": 10,
+      "escort": 0
+    },
+    "red_airport": {
+      "x": 807.1191291159989,
+      "y": 540.0075557531011
+    },
+    "steps": [
+      {
+        "step": 0,
+        "battlefield_coords": {
+          "x": 650.5,
+          "y": 420.3
+        },
+        "blue_uavs": {
+          "ground_attack": 8,
+          "recon": 3,
+          "escort": 2
+        }
+      },
+      {
+        "step": 1,
+        "battlefield_coords": {
+          "x": 720.8,
+          "y": 380.1
+        },
+        "blue_uavs": {
+          "ground_attack": 6,
+          "recon": 2,
+          "escort": 1
+        }
+      },
+      {
+        "step": 2,
+        "battlefield_coords": {
+          "x": 680.2,
+          "y": 450.7
+        },
+        "blue_uavs": {
+          "ground_attack": 4,
+          "recon": 1,
+          "escort": 0
+        }
+      },
+      {
+        "step": 3,
+        "battlefield_coords": {
+          "x": 750.9,
+          "y": 490.4
+        },
+        "blue_uavs": {
+          "ground_attack": 2,
+          "recon": 0,
+          "escort": 0
+        }
+      },
+      {
+        "step": 4,
+        "battlefield_coords": {
+          "x": 710.6,
+          "y": 520.8
+        },
+        "blue_uavs": {
+          "ground_attack": 0,
+          "recon": 0,
+          "escort": 0
+        }
+      }
+    ]
+  },
+  "steps": [
+    {
+      "step": 0,
+      "battlefield_coords": {
+        "x": 650.5,
+        "y": 420.3
+      },
+      "blue_uavs": {
+        "ground_attack": 8,
+        "recon": 3,
+        "escort": 2
+      },
+      "actions": [
+        {
+          "interceptor": 9,
+          "recon": 10,
+          "escort": 0
+        },
+        {
+          "interceptor": 20,
+          "recon": 3,
+          "escort": 0
+        },
+        {
+          "interceptor": 14,
+          "recon": 0,
+          "escort": 0
+        }
+      ],
+      "rewards": [
+        3.5,
+        6.0,
+        -0.5
+      ],
+      "average_reward": 3.0,
+      "cumulative_reward": 3.0,
+      "battlefield_states": [
+        {
+          "battlefield_id": 0,
+          "friendly_remaining": {
+            "interceptor": 0,
+            "recon": 0,
+            "escort": 0
+          },
+          "enemy_remaining": {
+            "ground_attack": 6,
+            "recon": 4,
+            "escort": 13
+          }
+        },
+        {
+          "battlefield_id": 1,
+          "friendly_remaining": {
+            "interceptor": 0,
+            "recon": 0,
+            "escort": 0
+          },
+          "enemy_remaining": {
+            "ground_attack": 6,
+            "recon": 4,
+            "escort": 13
+          }
+        },
+        {
+          "battlefield_id": 2,
+          "friendly_remaining": {
+            "interceptor": 0,
+            "recon": 0,
+            "escort": 0
+          },
+          "enemy_remaining": {
+            "ground_attack": 6,
+            "recon": 4,
+            "escort": 13
+          }
+        }
+      ]
+    },
+    {
+      "step": 1,
+      "battlefield_coords": {
+        "x": 720.8,
+        "y": 380.1
+      },
+      "blue_uavs": {
+        "ground_attack": 6,
+        "recon": 2,
+        "escort": 1
+      },
+      "actions": [
+        {
+          "interceptor": 2,
+          "recon": 4,
+          "escort": 0
+        },
+        {
+          "interceptor": 6,
+          "recon": 1,
+          "escort": 0
+        },
+        {
+          "interceptor": 14,
+          "recon": 0,
+          "escort": 0
+        }
+      ],
+      "rewards": [
+        -0.5,
+        -1.5,
+        -1.0
+      ],
+      "average_reward": -1.0,
+      "cumulative_reward": 2.0,
+      "battlefield_states": [
+        {
+          "battlefield_id": 0,
+          "friendly_remaining": {
+            "interceptor": 0,
+            "recon": 0,
+            "escort": 0
+          },
+          "enemy_remaining": {
+            "ground_attack": 1,
+            "recon": 0,
+            "escort": 3
+          }
+        },
+        {
+          "battlefield_id": 1,
+          "friendly_remaining": {
+            "interceptor": 0,
+            "recon": 0,
+            "escort": 0
+          },
+          "enemy_remaining": {
+            "ground_attack": 1,
+            "recon": 0,
+            "escort": 3
+          }
+        },
+        {
+          "battlefield_id": 2,
+          "friendly_remaining": {
+            "interceptor": 0,
+            "recon": 0,
+            "escort": 0
+          },
+          "enemy_remaining": {
+            "ground_attack": 1,
+            "recon": 0,
+            "escort": 3
+          }
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "battlefield_coords": {
+        "x": 680.2,
+        "y": 450.7
+      },
+      "blue_uavs": {
+        "ground_attack": 4,
+        "recon": 1,
+        "escort": 0
+      },
+      "actions": [
+        {
+          "interceptor": 2,
+          "recon": 4,
+          "escort": 0
+        },
+        {
+          "interceptor": 6,
+          "recon": 1,
+          "escort": 0
+        },
+        {
+          "interceptor": 14,
+          "recon": 0,
+          "escort": 0
+        }
+      ],
+      "rewards": [
+        -1.0,
+        0.0,
+        0.0
+      ],
+      "average_reward": -0.3333333333333333,
+      "cumulative_reward": 1.6666666666666667,
+      "battlefield_states": [
+        {
+          "battlefield_id": 0,
+          "friendly_remaining": {
+            "interceptor": 0,
+            "recon": 0,
+            "escort": 0
+          },
+          "enemy_remaining": {
+            "ground_attack": 0,
+            "recon": 0,
+            "escort": 0
+          }
+        },
+        {
+          "battlefield_id": 1,
+          "friendly_remaining": {
+            "interceptor": 0,
+            "recon": 0,
+            "escort": 0
+          },
+          "enemy_remaining": {
+            "ground_attack": 0,
+            "recon": 0,
+            "escort": 0
+          }
+        },
+        {
+          "battlefield_id": 2,
+          "friendly_remaining": {
+            "interceptor": 0,
+            "recon": 0,
+            "escort": 0
+          },
+          "enemy_remaining": {
+            "ground_attack": 0,
+            "recon": 0,
+            "escort": 0
+          }
+        }
+      ]
+    }
+  ]
+}

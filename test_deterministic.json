@@ -1,0 +1,28 @@
+{
+  "problem": { 
+    "K": 5, 
+    "red_uavs": {
+      "scout": 10, 
+      "interceptor": 40   
+    },
+    "blue_uavs": { 
+      "attack_list": [2, 3, 1, 2, 2],
+      "escort_list": [7, 6, 5, 6, 6],
+      "recon_list": [2, 3, 1, 2, 2]
+    },
+    "positions": {  
+      "red_airports": {
+        "Fuzhou Airport": [0, 2],
+        "Xiamen Airport": [0, 0],
+        "Quanzhou Airport": [0, 1]
+      },
+      "blue_clusters": { 
+        "Blue Cluster 1": [5, 2],
+        "Blue Cluster 2": [5, 1],
+        "Blue Cluster 3": [5, 0],
+        "Blue Cluster 4": [6, 2],
+        "Blue Cluster 5": [6, 1]
+      }
+    }
+  }
+}

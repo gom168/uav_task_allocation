@@ -1,0 +1,209 @@
+{
+  "episode_info": {
+    "start_time": "2025-09-13T19:19:51.797469",
+    "screen_width": 1200,
+    "screen_height": 800,
+    "end_time": "2025-09-13T19:19:51.815698",
+    "total_steps": 4,
+    "final_friendly_remaining": {
+      "interceptor": 0,
+      "recon": 0,
+      "escort": 0
+    },
+    "final_enemy_remaining": {
+      "ground_attack": 0,
+      "recon": 0,
+      "escort": 0
+    }
+  },
+  "steps": [
+    {
+      "step": 0,
+      "battlefield_coords": {
+        "x": 573.9997213697237,
+        "y": 271.9919730617609
+      },
+      "action": {
+        "interceptor": {
+          "count": 26,
+          "uav_ids": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25
+          ]
+        },
+        "recon": {
+          "count": 9,
+          "uav_ids": [
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48
+          ]
+        },
+        "escort": {
+          "count": 0,
+          "uav_ids": []
+        }
+      },
+      "reward": 40.0,
+      "cumulative_reward": 0.0,
+      "friendly_remaining": {
+        "interceptor": 14,
+        "recon": 1,
+        "escort": 0
+      },
+      "enemy_remaining": {
+        "ground_attack": 2,
+        "recon": 5,
+        "escort": 24
+      }
+    },
+    {
+      "step": 1,
+      "battlefield_coords": {
+        "x": 428.57607260253155,
+        "y": 448.2843113436329
+      },
+      "action": {
+        "interceptor": {
+          "count": 11,
+          "uav_ids": [
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36
+          ]
+        },
+        "recon": {
+          "count": 7,
+          "uav_ids": [
+            49
+          ]
+        },
+        "escort": {
+          "count": 0,
+          "uav_ids": []
+        }
+      },
+      "reward": 16.0,
+      "cumulative_reward": 0.0,
+      "friendly_remaining": {
+        "interceptor": 3,
+        "recon": 0,
+        "escort": 0
+      },
+      "enemy_remaining": {
+        "ground_attack": 1,
+        "recon": 0,
+        "escort": 21
+      }
+    },
+    {
+      "step": 2,
+      "battlefield_coords": {
+        "x": 825.5567290377573,
+        "y": 506.38164505613497
+      },
+      "action": {
+        "interceptor": {
+          "count": 2,
+          "uav_ids": [
+            37,
+            38
+          ]
+        },
+        "recon": {
+          "count": 1,
+          "uav_ids": []
+        },
+        "escort": {
+          "count": 0,
+          "uav_ids": []
+        }
+      },
+      "reward": 4.0,
+      "cumulative_reward": 0.0,
+      "friendly_remaining": {
+        "interceptor": 1,
+        "recon": 0,
+        "escort": 0
+      },
+      "enemy_remaining": {
+        "ground_attack": 0,
+        "recon": 0,
+        "escort": 1
+      }
+    },
+    {
+      "step": 3,
+      "battlefield_coords": {
+        "x": 360.3738076036869,
+        "y": 557.5076989731896
+      },
+      "action": {
+        "interceptor": {
+          "count": 6,
+          "uav_ids": [
+            39
+          ]
+        },
+        "recon": {
+          "count": 3,
+          "uav_ids": []
+        },
+        "escort": {
+          "count": 0,
+          "uav_ids": []
+        }
+      },
+      "reward": 1.0,
+      "cumulative_reward": 0.0,
+      "friendly_remaining": {
+        "interceptor": 0,
+        "recon": 0,
+        "escort": 0
+      },
+      "enemy_remaining": {
+        "ground_attack": 0,
+        "recon": 0,
+        "escort": 0
+      }
+    }
+  ]
+}

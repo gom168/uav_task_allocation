@@ -209,6 +209,7 @@ class UAVCombatEnv:
 
         # Current state of Red team's total UAVs
         self.red_uavs = self.initial_red_uavs.copy()
+        self.blue_uavs = self.initial_blue_uavs.copy()
         self.time_step = 0
 
         # --- Pygame Initialization (only if rendering is enabled) ---
@@ -347,6 +348,7 @@ class UAVCombatEnv:
         Resets the environment to its initial state.
         """
         self.red_uavs = self.initial_red_uavs.copy()
+        self.blue_uavs = self.initial_blue_uavs.copy()
         self.time_step = 0
         self.combat_active_display_time = 0
         self.red_engaged_uavs_visual = []
@@ -396,23 +398,23 @@ class UAVCombatEnv:
         initial_action_interceptor = action.get('interceptor', 0)
 
         if initial_action_recon < 1 and self.red_uavs['recon'] >= 1:
-            print(
-                f"Warning: Red action does not meet '1 Recon' constraint (current: {initial_action_recon}). Adjusting action to 1.")
+            # print(
+            #     f"Warning: Red action does not meet '1 Recon' constraint (current: {initial_action_recon}). Adjusting action to 1.")
             action['recon'] = 1
         if initial_action_interceptor < 1 and self.red_uavs['interceptor'] >= 1:
-            print(
-                f"Warning: Red action does not meet '1 Interceptor' constraint (current: {initial_action_interceptor}). Adjusting action to 1.")
+            # print(
+            #     f"Warning: Red action does not meet '1 Interceptor' constraint (current: {initial_action_interceptor}). Adjusting action to 1.")
             action['interceptor'] = 1
 
         # Blue Team Constraint: At least 1侦察无人机, 1对地攻击无人机
         initial_enemy_recon = enemy_formation.get('recon', 0)
         initial_enemy_ga = enemy_formation.get('ground_attack', 0)
 
-        if initial_enemy_recon < 1:
+        if initial_enemy_recon < 1 and self.blue_uavs['recon'] >=1:
             print(
                 f"Warning: Enemy formation does not meet '1 Recon' constraint (current: {initial_enemy_recon}). Adjusting formation to 1.")
             enemy_formation['recon'] = 1
-        if initial_enemy_ga < 1:
+        if initial_enemy_ga < 1 and self.blue_uavs['ground_attack'] >= 1:
             print(
                 f"Warning: Enemy formation does not meet '1 Ground Attack' constraint (current: {initial_enemy_ga}). Adjusting formation to 1.")
             enemy_formation['ground_attack'] = 1
@@ -608,7 +610,7 @@ class UAVCombatEnv:
 
         # --- After combat simulation (total_simulation_frames completed or early break) ---
         self.red_uavs.subtract(action)
-        self.initial_blue_uavs.subtract(enemy_formation)
+        self.blue_uavs.subtract(enemy_formation)
 
         for key in self.red_uavs:
             if self.red_uavs[key] < 0:
@@ -617,6 +619,8 @@ class UAVCombatEnv:
         for item, value in cumulative_blue_losses.items():
             if item == 'ground_attack':
                 reward += value * 3
+            elif item == 'recon':
+                reward += value * 2
             else:
                 reward += value
 
@@ -628,13 +632,14 @@ class UAVCombatEnv:
                 'recon': self.red_uavs['recon'],
                 'escort': self.red_uavs['escort']
             },
-            'current_enemy_formation_remaining': {k: v for k, v in self.initial_blue_uavs.items() if v > 0}
+            'current_enemy_formation_remaining': {k: v for k, v in self.blue_uavs.items() if v > 0}
         }
 
         # Done condition: if Red's primary combat units (interceptors or escorts) are depleted, or all UAVs are gone.
         # This 'done' is for the overall RL episode.
-        done = (self.red_uavs['interceptor'] <= 0 and self.red_uavs['escort'] <= 0) or (
-                    sum(self.red_uavs.values()) <= 0)
+        # done = (self.red_uavs['interceptor'] <= 0 and self.red_uavs['escort'] <= 0) or (
+        #             sum(self.red_uavs.values()) <= 0)
+        done = (self.blue_uavs['ground_attack'] <= 0 and self.blue_uavs['escort'] < 0 and self.blue_uavs['recon'] <= 0) or (sum(self.blue_uavs.values()) <= 0)
         self.time_step += 1
 
         info = {
