@@ -185,6 +185,9 @@ class QMIXInferenceRenderer:
     def __init__(self, model_path, config_path, device='cpu'):
         self.device = device
         self.config_path = config_path
+        self.red_uavs = None
+        self.blue_uavs = None
+        self.steps = None
         self.config = self.load_config(config_path)
 
         # 根据配置中的steps数量确定战场数量
@@ -216,6 +219,18 @@ class QMIXInferenceRenderer:
         """加载JSON配置文件"""
         with open(config_path, 'r') as f:
             config = json.load(f)
+        self.red_uavs = config["red_uavs"]
+        self.steps = config["steps"]
+        interceptor_num, recon_num, escort_num = 0, 0, 0
+        for step in range(len(self.steps)):
+            interceptor_num += self.steps[step]['blue_uavs']['ground_attack']
+            recon_num += self.steps[step]['blue_uavs']['recon']
+            escort_num += self.steps[step]['blue_uavs']['escort']
+        self.blue_uavs = {
+            'interceptor': interceptor_num,
+            'recon': recon_num,
+            'escort': escort_num
+        }
         return config
 
     def initialize_environment(self, env):
@@ -298,6 +313,8 @@ class QMIXInferenceRenderer:
         # 创建环境
         env = MultiBattlefieldEnv(
             num_battlefields=self.num_battlefields,
+            blue_uavs=self.blue_uavs,
+            red_uavs=self.red_uavs,
             render_mode=render,
             **image_config
         )
@@ -315,7 +332,29 @@ class QMIXInferenceRenderer:
         total_reward = 0
         step = 0
 
-        # 处理每个战场步骤
+        # # 处理每个战场步骤
+        # steps = self.config['steps']
+        # batch_size = self.num_battlefields
+        # for i in range(0, len(steps), batch_size):
+        #     battlefield_all_coords = []
+        #     all_blue_uavs = []
+        #     batch = steps[i:i + batch_size]
+        #     if len(batch) < batch_size:
+        #         batch = batch + [None] * (batch_size - len(batch))
+        #     for step_idx, step_info in enumerate(batch):
+        #         if step_info is not None:
+        #             battlefield_coords = step_info['battlefield_coords']
+        #             battlefield_coords_tep = [battlefield_coords["x"], battlefield_coords["y"]]
+        #             battlefield_all_coords.append(battlefield_coords_tep)
+        #             all_blue_uavs.append(step_info['blue_uavs'])
+        #         else:
+        #             battlefield_all_coords.append([0, 0])
+        #             all_blue_uavs.append({
+        #                 "ground_attack": 0,
+        #                 "recon": 0,
+        #                 "escort": 0
+        #             })
+
         for step_idx, step_info in enumerate(self.config['steps']):
             print(f"\n=== Step {step_idx + 1}/{len(self.config['steps'])} ===")
 

@@ -1,0 +1,89 @@
+{
+  "drone_allocation_details": [
+    {
+      "cluster": "Blue Cluster 1",
+      "scout_ids": [
+        40,
+        41
+      ],
+      "interceptor_ids": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "cluster": "Blue Cluster 2",
+      "scout_ids": [
+        47,
+        48,
+        49
+      ],
+      "interceptor_ids": [
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ]
+    },
+    {
+      "cluster": "Blue Cluster 3",
+      "scout_ids": [
+        44
+      ],
+      "interceptor_ids": [
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    },
+    {
+      "cluster": "Blue Cluster 4",
+      "scout_ids": [
+        42,
+        43
+      ],
+      "interceptor_ids": [
+        9,
+        10,
+        11,
+        12,
+        13,
+        36,
+        37,
+        38
+      ]
+    },
+    {
+      "cluster": "Blue Cluster 5",
+      "scout_ids": [
+        45,
+        46
+      ],
+      "interceptor_ids": [
+        39,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26
+      ]
+    }
+  ]
+}

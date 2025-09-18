@@ -16,9 +16,9 @@
                 "y": 420.3
             },
             "blue_uavs": {
-                "ground_attack": 8,
-                "recon": 3,
-                "escort": 2
+                "ground_attack": 2,
+                "recon": 2,
+                "escort": 6
             }
         },
         {
@@ -28,9 +28,9 @@
                 "y": 380.1
             },
             "blue_uavs": {
-                "ground_attack": 6,
+                "ground_attack": 3,
                 "recon": 2,
-                "escort": 1
+                "escort": 8
             }
         },
         {
@@ -40,9 +40,9 @@
                 "y": 450.7
             },
             "blue_uavs": {
-                "ground_attack": 4,
-                "recon": 1,
-                "escort": 0
+                "ground_attack": 1,
+                "recon": 2,
+                "escort": 6
             }
         },
         {
@@ -53,8 +53,8 @@
             },
             "blue_uavs": {
                 "ground_attack": 2,
-                "recon": 0,
-                "escort": 0
+                "recon": 2,
+                "escort": 5
             }
         },
         {
@@ -64,9 +64,9 @@
                 "y": 520.8
             },
             "blue_uavs": {
-                "ground_attack": 0,
-                "recon": 0,
-                "escort": 0
+                "ground_attack": 2,
+                "recon": 2,
+                "escort": 5
             }
         }
     ]

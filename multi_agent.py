@@ -142,6 +142,8 @@ class MultiBattlefieldEnv:
     def __init__(self,
                  num_battlefields: int = 3,
                  render_mode: bool = True,
+                 blue_uavs = None,
+                 red_uavs = None,
                  background_image: Optional[str] = None,
                  red_images: Dict[str, str] = None,
                  blue_images: Dict[str, str] = None):
@@ -150,16 +152,23 @@ class MultiBattlefieldEnv:
         self.render_mode = render_mode
 
         # Initial configuration
-        self.initial_blue_uavs = Counter({
-            'ground_attack': 10,
-            'recon': 10,
-            'escort': 30
-        })
-        self.initial_red_uavs = Counter({
-            'interceptor': 40,
-            'recon': 10,
-            'escort': 0
-        })
+        if blue_uavs is not None:
+            self.initial_blue_uavs = blue_uavs
+        else:
+            self.initial_blue_uavs = Counter({
+                'ground_attack': 10,
+                'recon': 10,
+                'escort': 30
+            })
+
+        if red_uavs is not None:
+            self.initial_red_uavs = red_uavs
+        else:
+            self.initial_red_uavs = Counter({
+                'interceptor': 40,
+                'recon': 10,
+                'escort': 0
+            })
 
         # Combat parameters
         self.PROB_RED_MW_LASER_DMG_BLUE_GA = 0.7

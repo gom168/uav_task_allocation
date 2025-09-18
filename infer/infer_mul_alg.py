@@ -64,6 +64,8 @@ class UAVCombatGymEnv(Env):
         self.seed = seed
         self.input_data = input_data  # 存储输入JSON数据
         self.algorithm_name = algorithm_name
+        self.steps = None
+        self.count_step = 0
 
         # 解析输入JSON数据
         if input_data:
@@ -79,11 +81,18 @@ class UAVCombatGymEnv(Env):
                 'x': 807.1191291159989,
                 'y': 540.0075557531011
             })
+            self.steps = input_data.get('steps')
+            ground_attack_num, recon_num, escort_num = 0, 0, 0
+            for step in range(len(self.steps)):
+                ground_attack_num += self.steps[step]['blue_uavs']['ground_attack']
+                recon_num += self.steps[step]['blue_uavs']['recon']
+                escort_num += self.steps[step]['blue_uavs']['escort']
+
 
             # 创建自定义环境
             self.custom_env = UAVCombatEnv(
                 initial_red_uav_counts=red_uavs,
-                initial_blue_uav_counts=Counter({'ground_attack': 10, 'recon': 10, 'escort': 30}),
+                initial_blue_uav_counts=Counter({'ground_attack': ground_attack_num, 'recon': recon_num, 'escort': escort_num}),
                 red_base_rect=pygame.Rect(50, 400, 200, 300),
                 blue_base_rect=pygame.Rect(950, 400, 200, 300),
                 render_mode=render_mode
@@ -174,6 +183,7 @@ class UAVCombatGymEnv(Env):
         # 创建初始观察
         enemy_state = {"current_enemy_formation_remaining": self.custom_env.blue_uavs}
         enemy_formation = self.generate_enemy_formation(enemy_state)
+        self.count_step = 0
         initial_obs = self._create_observation(state, enemy_formation)
 
         # 填充历史缓冲区
@@ -192,11 +202,14 @@ class UAVCombatGymEnv(Env):
             # 将连续动作转换为整数
             action = self._continuous_to_discrete(action)
 
+        if self.custom_env.red_uavs['recon'] > 1:
+            action[1] = max(action[1], 1)
+
         # 将离散动作转换为字典格式
         action_dict = {
-            'interceptor': action[0],
-            'recon': action[1],
-            'escort': action[2]
+            'interceptor': min(action[0], self.custom_env.red_uavs['interceptor']),
+            'recon': min(action[1], self.custom_env.red_uavs['recon']),
+            'escort': 0
         }
 
         # 获取分配的无人机ID
@@ -204,7 +217,8 @@ class UAVCombatGymEnv(Env):
 
         # 使用新逻辑生成敌方配置
         enemy_state = {"current_enemy_formation_remaining": self.custom_env.blue_uavs}
-        enemy_formation = self.generate_enemy_formation(enemy_state)
+        enemy_formation = self.generate_enemy_formation(enemy_state, step=self.count_step)
+        self.count_step += 1
         battlefield_coords = self.generate_battlefield_coords()
 
         # 执行环境步进
@@ -213,6 +227,8 @@ class UAVCombatGymEnv(Env):
             enemy_formation=enemy_formation,
             battlefield_coords=battlefield_coords
         )
+        if self.count_step >= len(self.steps):
+            done = True
 
         # 记录步骤信息到JSON
         step_info = {
@@ -306,7 +322,7 @@ class UAVCombatGymEnv(Env):
         # 将历史状态堆叠为矩阵
         return np.array(self.state_history, dtype=np.float32)
 
-    def generate_enemy_formation(self, state):
+    def generate_enemy_formation(self, state, step=0):
         """生成确定性的敌方编队"""
         enemy_remaining = state.get('current_enemy_formation_remaining', {})
 
@@ -315,12 +331,15 @@ class UAVCombatGymEnv(Env):
         escort_remaining = enemy_remaining.get('escort', 30)
 
         # 使用固定的随机数生成器确保确定性
-        ground_attack = min(self.rng.randint(1, max(2, ground_attack_remaining + 1)), ground_attack_remaining)
-        recon = min(self.rng.randint(1, max(2, recon_remaining + 1)), recon_remaining)
-        escort = min(self.rng.randint(0, max(1, escort_remaining + 1)), escort_remaining)
+        # ground_attack = min(self.rng.randint(1, max(2, ground_attack_remaining + 1)), ground_attack_remaining)
+        # recon = min(self.rng.randint(1, max(2, recon_remaining + 1)), recon_remaining)
+        # escort = min(self.rng.randint(0, max(1, escort_remaining + 1)), escort_remaining)
+        ground_attack = self.steps[step]['blue_uavs']['ground_attack']
+        recon = self.steps[step]['blue_uavs']['recon']
+        escort = self.steps[step]['blue_uavs']['escort']
 
-        ground_attack = max(ground_attack, 1) if ground_attack_remaining > 0 else 0
-        recon = max(recon, 1) if recon_remaining > 0 else 0
+        # ground_attack = max(ground_attack, 1) if ground_attack_remaining > 0 else 0
+        # recon = max(recon, 1) if recon_remaining > 0 else 0
 
         return {
             'ground_attack': ground_attack,

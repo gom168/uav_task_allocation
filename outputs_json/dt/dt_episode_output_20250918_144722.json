@@ -1,0 +1,230 @@
+{
+  "episode_info": {
+    "start_time": "2025-09-18T14:47:22.386602",
+    "screen_width": 1200,
+    "screen_height": 800,
+    "end_time": "2025-09-18T14:47:22.515754",
+    "total_steps": 5,
+    "total_return": 66.5,
+    "final_friendly_remaining": {
+      "interceptor": 15,
+      "recon": 0,
+      "escort": 0
+    },
+    "final_enemy_remaining": {
+      "ground_attack": 0,
+      "recon": 0,
+      "escort": 0
+    }
+  },
+  "steps": [
+    {
+      "step": 0,
+      "battlefield_coords": {
+        "x": 787.2628449822365,
+        "y": 426.48917045802807
+      },
+      "action": {
+        "interceptor": {
+          "count": 5,
+          "uav_ids": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        "recon": {
+          "count": 4,
+          "uav_ids": [
+            40,
+            41,
+            42,
+            43
+          ]
+        },
+        "escort": {
+          "count": 0,
+          "uav_ids": []
+        }
+      },
+      "reward": 9.0,
+      "cumulative_reward": 9.0,
+      "friendly_remaining": {
+        "interceptor": 35,
+        "recon": 6,
+        "escort": 0
+      },
+      "enemy_remaining": {
+        "ground_attack": 8,
+        "recon": 8,
+        "escort": 24
+      }
+    },
+    {
+      "step": 1,
+      "battlefield_coords": {
+        "x": 662.1320438526686,
+        "y": 381.23396133654825
+      },
+      "action": {
+        "interceptor": {
+          "count": 9,
+          "uav_ids": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13
+          ]
+        },
+        "recon": {
+          "count": 3,
+          "uav_ids": [
+            44,
+            45,
+            46
+          ]
+        },
+        "escort": {
+          "count": 0,
+          "uav_ids": []
+        }
+      },
+      "reward": 20.5,
+      "cumulative_reward": 29.5,
+      "friendly_remaining": {
+        "interceptor": 26,
+        "recon": 3,
+        "escort": 0
+      },
+      "enemy_remaining": {
+        "ground_attack": 5,
+        "recon": 6,
+        "escort": 16
+      }
+    },
+    {
+      "step": 2,
+      "battlefield_coords": {
+        "x": 527.7677190899977,
+        "y": 288.9254428246924
+      },
+      "action": {
+        "interceptor": {
+          "count": 5,
+          "uav_ids": [
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        },
+        "recon": {
+          "count": 1,
+          "uav_ids": [
+            47
+          ]
+        },
+        "escort": {
+          "count": 0,
+          "uav_ids": []
+        }
+      },
+      "reward": 13.0,
+      "cumulative_reward": 42.5,
+      "friendly_remaining": {
+        "interceptor": 21,
+        "recon": 2,
+        "escort": 0
+      },
+      "enemy_remaining": {
+        "ground_attack": 4,
+        "recon": 4,
+        "escort": 10
+      }
+    },
+    {
+      "step": 3,
+      "battlefield_coords": {
+        "x": 410.0169656922546,
+        "y": 551.0586533490689
+      },
+      "action": {
+        "interceptor": {
+          "count": 3,
+          "uav_ids": [
+            19,
+            20,
+            21
+          ]
+        },
+        "recon": {
+          "count": 1,
+          "uav_ids": [
+            48
+          ]
+        },
+        "escort": {
+          "count": 0,
+          "uav_ids": []
+        }
+      },
+      "reward": 11.0,
+      "cumulative_reward": 53.5,
+      "friendly_remaining": {
+        "interceptor": 18,
+        "recon": 1,
+        "escort": 0
+      },
+      "enemy_remaining": {
+        "ground_attack": 2,
+        "recon": 2,
+        "escort": 5
+      }
+    },
+    {
+      "step": 4,
+      "battlefield_coords": {
+        "x": 444.6243744689173,
+        "y": 273.52481277913427
+      },
+      "action": {
+        "interceptor": {
+          "count": 3,
+          "uav_ids": [
+            22,
+            23,
+            24
+          ]
+        },
+        "recon": {
+          "count": 1,
+          "uav_ids": []
+        },
+        "escort": {
+          "count": 0,
+          "uav_ids": []
+        }
+      },
+      "reward": 13.0,
+      "cumulative_reward": 66.5,
+      "friendly_remaining": {
+        "interceptor": 15,
+        "recon": 0,
+        "escort": 0
+      },
+      "enemy_remaining": {
+        "ground_attack": 0,
+        "recon": 0,
+        "escort": 0
+      }
+    }
+  ]
+}

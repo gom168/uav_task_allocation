@@ -23,26 +23,7 @@ def generate_battlefield_coords():
     )
 
 
-def generate_enemy_formation(state):
-    """生成敌方编队"""
-    enemy_remaining = state.get('current_enemy_formation_remaining', {})
 
-    ground_attack_remaining = enemy_remaining.get('ground_attack', 10)
-    recon_remaining = enemy_remaining.get('recon', 10)
-    escort_remaining = enemy_remaining.get('escort', 30)
-
-    ground_attack = min(np.random.randint(1, max(2, ground_attack_remaining + 1)), ground_attack_remaining)
-    recon = min(np.random.randint(1, max(2, recon_remaining + 1)), recon_remaining)
-    escort = min(np.random.randint(0, max(1, escort_remaining + 1)), escort_remaining)
-
-    ground_attack = max(ground_attack, 1) if ground_attack_remaining > 0 else 0
-    recon = max(recon, 1) if recon_remaining > 0 else 0
-
-    return {
-        'ground_attack': ground_attack,
-        'recon': recon,
-        'escort': escort
-    }
 
 
 def state_to_observation(state, enemy_formation=None):
@@ -67,6 +48,7 @@ class DTInferenceRenderer:
         self.render = render
         self.input_json = input_json
         self.load_model(checkpoint_path)
+        self.steps = None
         self.env = self.create_environment()
         self.output_data = {
             "episode_info": {
@@ -81,6 +63,30 @@ class DTInferenceRenderer:
             'interceptor': [],
             'recon': [],
             'escort': []
+        }
+
+    def generate_enemy_formation(self, state, step=0):
+        """生成敌方编队"""
+        enemy_remaining = state.get('current_enemy_formation_remaining', {})
+
+        ground_attack_remaining = enemy_remaining.get('ground_attack', 10)
+        recon_remaining = enemy_remaining.get('recon', 10)
+        escort_remaining = enemy_remaining.get('escort', 30)
+
+        # ground_attack = min(np.random.randint(1, max(2, ground_attack_remaining + 1)), ground_attack_remaining)
+        # recon = min(np.random.randint(1, max(2, recon_remaining + 1)), recon_remaining)
+        # escort = min(np.random.randint(0, max(1, escort_remaining + 1)), escort_remaining)
+        ground_attack = self.steps[step]["blue_uavs"]["ground_attack"]
+        recon = self.steps[step]["blue_uavs"]["recon"]
+        escort = self.steps[step]["blue_uavs"]["escort"]
+
+        # ground_attack = max(ground_attack, 1) if ground_attack_remaining > 0 else 0
+        # recon = max(recon, 1) if recon_remaining > 0 else 0
+
+        return {
+            'ground_attack': ground_attack,
+            'recon': recon,
+            'escort': escort
         }
 
     def load_model(self, checkpoint_path):
@@ -144,6 +150,7 @@ class DTInferenceRenderer:
 
             # 提取步骤信息（如果有）
             steps = data.get('steps', [])
+            self.steps = steps
             return {
                 'red_uavs': red_uavs,
                 'red_airport': red_airport,
@@ -167,9 +174,15 @@ class DTInferenceRenderer:
             red_uavs = Counter({'interceptor': 40, 'recon': 10, 'escort': 0})
             red_airport = (807.1191291159989, 540.0075557531011)
 
+        ground_attack_num, recon_num, escort_num = 0, 0, 0
+        for step in range(len(self.steps)):
+            ground_attack_num += self.steps[step]['blue_uavs']['ground_attack']
+            recon_num += self.steps[step]['blue_uavs']['recon']
+            escort_num += self.steps[step]['blue_uavs']['escort']
+
         return UAVCombatEnv(
             initial_red_uav_counts=red_uavs,
-            initial_blue_uav_counts=Counter({'ground_attack': 10, 'recon': 10, 'escort': 30}),
+            initial_blue_uav_counts=Counter({'ground_attack': ground_attack_num, 'recon': recon_num, 'escort': escort_num}),
             render_mode=self.render,
             background_image_path='figure/背景_new.png',
             red_interceptor_image_path='figure/红.png',
@@ -230,7 +243,8 @@ class DTInferenceRenderer:
         self.initialize_uav_ids()
 
         enemy_state = {"current_enemy_formation_remaining": self.env.blue_uavs}
-        enemy_formation = generate_enemy_formation(enemy_state)
+        step = 0
+        enemy_formation = self.generate_enemy_formation(enemy_state, step=step)
         battlefield_coords = generate_battlefield_coords()
 
         # 准备缓冲区
@@ -265,6 +279,8 @@ class DTInferenceRenderer:
 
             # 处理动作（确保在合理范围内）
             remaining_friendly = self.env.red_uavs
+            if remaining_friendly['recon'] > 1:
+                predicted_action[1] = max(int(predicted_action[1]), 1)
             action_dict = {
                 'interceptor': min(max(0, int(predicted_action[0])), remaining_friendly['interceptor']),
                 'recon': min(max(0, int(predicted_action[1])), remaining_friendly['recon']),
@@ -307,20 +323,25 @@ class DTInferenceRenderer:
 
             # 更新敌方编队和战场坐标
             enemy_state = {"current_enemy_formation_remaining": self.env.blue_uavs}
-            enemy_formation = generate_enemy_formation(enemy_state)
-            battlefield_coords = generate_battlefield_coords()
+            step += 1
 
-            # 转换下一个状态
-            next_obs = state_to_observation(next_state, enemy_formation)
+            if step >= len(self.steps):
+                done = True
+            else:
+                enemy_formation = self.generate_enemy_formation(enemy_state, step)
+                battlefield_coords = generate_battlefield_coords()
 
-            # 更新缓冲区
-            states = torch.roll(states, shifts=-1, dims=1)
-            actions = torch.roll(actions, shifts=-1, dims=1)
-            returns = torch.roll(returns, shifts=-1, dims=1)
+                # 转换下一个状态
+                next_obs = state_to_observation(next_state, enemy_formation)
 
-            states[0, -1] = torch.as_tensor(next_obs, device=self.device)
-            actions[0, -1] = torch.as_tensor(predicted_action, device=self.device)
-            returns[0, -1] = torch.as_tensor(returns[0, -2] - reward, device=self.device)
+                # 更新缓冲区
+                states = torch.roll(states, shifts=-1, dims=1)
+                actions = torch.roll(actions, shifts=-1, dims=1)
+                returns = torch.roll(returns, shifts=-1, dims=1)
+
+                states[0, -1] = torch.as_tensor(next_obs, device=self.device)
+                actions[0, -1] = torch.as_tensor(predicted_action, device=self.device)
+                returns[0, -1] = torch.as_tensor(returns[0, -2] - reward, device=self.device)
 
             episode_return += reward
             step_count += 1
