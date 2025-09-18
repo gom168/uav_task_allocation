@@ -183,14 +183,14 @@ class UAVVisualizationApp:
         compare_frame = ttk.Frame(compare_tab)
         compare_frame.pack(fill=tk.X, pady=5)
         # 包含确定性算法、QMIX、QTRAN 的选项
-        all_model_options = SUPPORTED_ALGS + ['DT', QMIX_ALG_NAME, QTRAN_ALG_NAME, DETERMINISTIC_ALG_NAME]
+        all_model_options = SUPPORTED_ALGS + ['DT', QMIX_ALG_NAME, QTRAN_ALG_NAME]
         self.compare_model1 = tk.StringVar(value="PPO")
         self.compare_model2 = tk.StringVar(value="DT")
         ttk.Label(compare_frame, text="对比模型1:").pack(side=tk.LEFT)
         ttk.Combobox(compare_frame, textvariable=self.compare_model1, values=all_model_options, width=12).pack(side=tk.LEFT, padx=5)
         ttk.Label(compare_frame, text="对比模型2:").pack(side=tk.LEFT, padx=(20, 5))
         ttk.Combobox(compare_frame, textvariable=self.compare_model2, values=all_model_options, width=12).pack(side=tk.LEFT, padx=5)
-        ttk.Button(compare_frame, text="刷新对比", command=self.update_comparison).pack(side=tk.LEFT, padx=10)
+        ttk.Button(compare_frame, text="开始对比", command=self.update_comparison).pack(side=tk.LEFT, padx=10)
         # 添加加载特定结果文件的按钮
         ttk.Button(compare_frame, text="加载模型1结果", command=self.load_compare_model1).pack(side=tk.LEFT, padx=10)
         ttk.Button(compare_frame, text="加载模型2结果", command=self.load_compare_model2).pack(side=tk.LEFT, padx=10)
@@ -397,7 +397,6 @@ class UAVVisualizationApp:
             self.alg_texts[alg].delete(1.0, tk.END)
             self.alg_texts[alg].insert(1.0, json.dumps(self.results[alg], indent=2, ensure_ascii=False))
             self.update_alg_visualization(alg)
-            self.update_comparison()
             messagebox.showinfo("成功", f"{alg} 结果文件加载成功: {os.path.basename(file_path)}")
         except Exception as e:
             messagebox.showerror("错误", f"加载 {alg} 文件失败: {str(e)}")
@@ -568,7 +567,6 @@ class UAVVisualizationApp:
             self.qmix_text.delete(1.0, tk.END) # 修改变量名
             self.qmix_text.insert(1.0, json.dumps(self.results[QMIX_ALG_NAME], indent=2, ensure_ascii=False)) # 修改变量名
             self.update_qmix_visualization() # 修改函数名
-            self.update_comparison()
             messagebox.showinfo("成功", f"QMIX 结果文件加载成功: {os.path.basename(file_path)}")
         except Exception as e:
             messagebox.showerror("错误", f"加载 QMIX 文件失败: {str(e)}")
@@ -669,7 +667,6 @@ class UAVVisualizationApp:
             self.qtran_text.delete(1.0, tk.END)
             self.qtran_text.insert(1.0, json.dumps(self.results[QTRAN_ALG_NAME], indent=2, ensure_ascii=False))
             self.update_qtran_visualization() # 更新可视化
-            self.update_comparison() # 更新对比
             messagebox.showinfo("成功", f"QTRAN 结果文件加载成功: {os.path.basename(file_path)}")
         except Exception as e:
             messagebox.showerror("错误", f"加载 QTRAN 文件失败: {str(e)}")
@@ -765,7 +762,6 @@ class UAVVisualizationApp:
             self.deterministic_text.delete(1.0, tk.END)
             self.deterministic_text.insert(1.0, json.dumps(self.results[DETERMINISTIC_ALG_NAME], indent=2, ensure_ascii=False))
             self.update_deterministic_visualization() # 更新可视化
-            self.update_comparison() # 更新对比
             messagebox.showinfo("成功", f"确定性算法结果文件加载成功: {os.path.basename(file_path)}")
         except Exception as e:
             messagebox.showerror("错误", f"加载确定性算法文件失败: {str(e)}")
@@ -1104,7 +1100,6 @@ class UAVVisualizationApp:
             self.dt_text.delete(1.0, tk.END)
             self.dt_text.insert(1.0, json.dumps(self.results['DT'], indent=2, ensure_ascii=False))
             self.update_dt_visualization()
-            self.update_comparison()
             messagebox.showinfo("成功", f"DT结果文件加载成功: {os.path.basename(file_path)}")
         except Exception as e:
             messagebox.showerror("错误", f"加载DT文件失败: {str(e)}")
@@ -1115,10 +1110,8 @@ class UAVVisualizationApp:
         data = self.results.get('DT')
         if not data:
             return
-        # (可视化代码与 update_alg_visualization 类似，为简洁起见，这里复用逻辑)
         self._common_visualization(self.dt_fig_frame, data, "DT")
 
-    # --- Common Visualization Helper ---
     # --- Common Visualization Helper ---
     def _common_visualization(self, frame, data, title_prefix):
         for widget in frame.winfo_children():
@@ -1165,9 +1158,68 @@ class UAVVisualizationApp:
             ax1.set_ylabel("奖励")
             ax1.legend()
             ax1.grid(True, alpha=0.3)
-            # ... (其余代码保持不变) ...
-            # (为了简洁，这里省略了未修改的部分，您保持原样即可)
-            # ... (例如无人机数量、动作分布的绘制逻辑) ...
+
+            # 添加友方无人机数量图表
+            if 'friendly_remaining' in data['steps'][0]:
+                friendly_interceptor = [s['friendly_remaining'].get('interceptor', 0) for s in data['steps']]
+                friendly_recon = [s['friendly_remaining'].get('recon', 0) for s in data['steps']]
+                ax2.plot(steps, friendly_interceptor, 'g-', label='友方拦截机', linewidth=1.5)
+                ax2.plot(steps, friendly_recon, 'b-', label='友方侦察机', linewidth=1.5)
+                ax2.set_title("友方无人机数量")
+                ax2.set_xlabel("步数")
+                ax2.set_ylabel("数量")
+                ax2.legend()
+                ax2.grid(True, alpha=0.3)
+            else:
+                ax2.text(0.5, 0.5, '无友方无人机数据', ha='center', va='center', transform=ax2.transAxes)
+                ax2.set_title("友方无人机数量")
+
+            # 添加敌方无人机数量图表
+            if 'enemy_remaining' in data['steps'][0]:
+                enemy_ground_attack = [s['enemy_remaining'].get('ground_attack', 0) for s in data['steps']]
+                enemy_recon = [s['enemy_remaining'].get('recon', 0) for s in data['steps']]
+                ax3.plot(steps, enemy_ground_attack, 'r-', label='敌方攻击机', linewidth=1.5)
+                ax3.plot(steps, enemy_recon, 'm-', label='敌方侦察机', linewidth=1.5)
+                ax3.set_title("敌方无人机数量")
+                ax3.set_xlabel("步数")
+                ax3.set_ylabel("数量")
+                ax3.legend()
+                ax3.grid(True, alpha=0.3)
+            else:
+                ax3.text(0.5, 0.5, '无敌方无人机数据', ha='center', va='center', transform=ax3.transAxes)
+                ax3.set_title("敌方无人机数量")
+
+            # 添加动作分布图表
+            if 'action' in data['steps'][0]:
+                interceptor_actions = []
+                recon_actions = []
+                escort_actions = []
+                for s in data['steps']:
+                    action = s.get('action', {})
+                    interceptor_actions.append(
+                        action.get('interceptor', {}).get('count', 0) if isinstance(action.get('interceptor', {}),
+                                                                                    dict) else action.get('interceptor',
+                                                                                                          0))
+                    recon_actions.append(action.get('recon', {}).get('count', 0) if isinstance(action.get('recon', {}),
+                                                                                               dict) else action.get(
+                        'recon', 0))
+                    escort_actions.append(
+                        action.get('escort', {}).get('count', 0) if isinstance(action.get('escort', {}),
+                                                                               dict) else action.get('escort', 0))
+                x_pos = np.arange(len(steps))
+                width = 0.25
+                ax4.bar(x_pos - width, interceptor_actions, width, label='拦截机动作', alpha=0.8)
+                ax4.bar(x_pos, recon_actions, width, label='侦察机动作', alpha=0.8)
+                ax4.bar(x_pos + width, escort_actions, width, label='护航机动作', alpha=0.8)
+                ax4.set_title("动作分布")
+                ax4.set_xlabel("步数")
+                ax4.set_ylabel("动作数量")
+                ax4.legend()
+                ax4.grid(True, alpha=0.3)
+            else:
+                ax4.text(0.5, 0.5, '无动作数据', ha='center', va='center', transform=ax4.transAxes)
+                ax4.set_title("动作分布")
+
         else:
             ax = fig.add_subplot(111)
             ax.text(0.5, 0.5, '无步骤数据', ha='center', va='center', transform=ax.transAxes, fontsize=16)
@@ -1191,7 +1243,6 @@ class UAVVisualizationApp:
                  try:
                      with open(file_path, 'r', encoding='utf-8') as f:
                          self.results[model1] = json.load(f)
-                     self.update_comparison()
                      messagebox.showinfo("成功", f"{model1} 结果文件加载成功: {os.path.basename(file_path)}")
                  except Exception as e:
                      messagebox.showerror("错误", f"加载 {model1} 文件失败: {str(e)}")
@@ -1228,7 +1279,6 @@ class UAVVisualizationApp:
                  try:
                      with open(file_path, 'r', encoding='utf-8') as f:
                          self.results[model2] = json.load(f)
-                     self.update_comparison()
                      messagebox.showinfo("成功", f"{model2} 结果文件加载成功: {os.path.basename(file_path)}")
                  except Exception as e:
                      messagebox.showerror("错误", f"加载 {model2} 文件失败: {str(e)}")
@@ -1255,6 +1305,11 @@ class UAVVisualizationApp:
         for widget in self.compare_fig_frame.winfo_children():
             widget.destroy()
         self.compare_text.delete(1.0, tk.END)
+
+        # 添加清空按钮
+        clear_button = tk.Button(self.compare_fig_frame, text="清空对比", command=self.clear_comparison,
+                                 bg="#f44336", fg="white", font=("Arial", 10, "bold"))
+        clear_button.pack(pady=5)
 
         m1 = self.compare_model1.get()
         m2 = self.compare_model2.get()
@@ -1531,6 +1586,23 @@ class UAVVisualizationApp:
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         self.compare_text.insert(1.0, text)
         # --- 结束更新 UI ---
+
+    def clear_comparison(self):
+        """清空对比信息，回到初始状态"""
+        # 清空图表区域
+        for widget in self.compare_fig_frame.winfo_children():
+            widget.destroy()
+
+        # 清空文本区域
+        self.compare_text.delete(1.0, tk.END)
+
+        # 重置下拉选择框
+        self.compare_model1.set("")
+        self.compare_model2.set("")
+
+        # 显示初始提示信息
+        self.compare_text.insert(1.0, "请从上方选择两个模型进行对比")
+
 
 def main():
     root = tk.Tk()
