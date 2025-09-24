@@ -6,7 +6,7 @@
 ![图片描述](images/main_menu.png)
 
 支持的算法包括PPO，A2C，DQN，DT，QMIX，Qtran和基于拉格朗日的确定性算法。其中对于前四种，可以同时支持训练和推理。
-QMIX和Qtran的设定则只能支持但整体算法。
+QMIX和Qtran的设定则只能支持但整体算法。同时额外添加了任务重规划算法的支持。
 
 ## 二、安装和运行说明：
 ```shell
@@ -36,6 +36,7 @@ python main.py
 │   ├── 📄 infer_mul_alg.py         # PPO,A2C,DQN 推理代码
 │   ├── 📄 infer_qmix.py            # QMIX 推理代码
 │   ├── 📄 infer_qtrans.py          # Qtrans 推理代码
+│   ├── 📄 Main_error.py            # 任务重规划 推理代码
 │   └── 📄 infer_dt_new.py          # 基于DT推理代码
 ├── 📂 outputs_json/                # 推理结果
 │   ├── 📂 A2C/                     # A2C结果
@@ -50,6 +51,11 @@ python main.py
 │   │   └── 📄 PPO_episode_output_20250914_163732.json    
 │   ├── 📂 Qmix /                   # Qmix算法结果
 │   │   └── 📄 qmix_inference_output_20250914_212753.json
+│   ├── 📂 replanning /             # 任务重规划算法结果
+│   │   ├── 📄 replan_scene1_failure_allocation_output_20250924_185156.json
+│   │   ├── 📄 replan_scene2_transfer_allocation_output_20250924_185156.json
+│   │   ├── 📄 replan_scene3_transfer_allocation_output_20250924_185156.json
+│   │   └── 📄 replan_init_allocation_output_20250924_185156.json
 │   └── 📂 QTRAN /                  # QTRANS算法结果
 │       └── 📄 qtran_inference_output_20250914_202543.json
 ├── 📂 save_models/                 # 保存的预训练模型
@@ -66,7 +72,7 @@ python main.py
 ├── 📄 multi_agent.py              # 多智能体仿真环境
 ├── 📄 task_allocation.py          # 单智能体仿真环境
 ├── 📄 test.json                   # RL测试JSON
-├── 📄 test_deterministic.json     # 拉格朗日测试JSON
+├── 📄 test_deterministic.json     # 拉格朗日测试JSON以及任务重规划测试json
 ├── 📄 main.py                     # 主函数代码
 └── 📄 README.md                   # 项目说明文档
 --

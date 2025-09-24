@@ -456,6 +456,7 @@ def run_inference(algorithm_name, model_path, num_episodes=5, render=True, seed=
     print(f"开始使用 {algorithm_name} 算法进行确定性推理 (种子={seed})...")
 
     # 运行多个episode
+    start_time = time.time()
     for episode in range(num_episodes):
         obs, _ = env.reset(seed=seed + episode)  # 为每个episode设置不同的种子
         done = False
@@ -489,7 +490,8 @@ def run_inference(algorithm_name, model_path, num_episodes=5, render=True, seed=
 
         # 保存输出JSON
         env.save_output_json()
-
+    end_time = time.time()
+    print(f"规划时间为:{end_time - start_time}")
     env.close()
     print(f"\n{algorithm_name} 算法确定性推理完成!")
 

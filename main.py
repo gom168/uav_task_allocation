@@ -7,6 +7,7 @@ import os
 import sys
 import numpy as np
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from pylab import mpl
 import glob
@@ -17,6 +18,7 @@ mpl.rcParams['axes.unicode_minus'] = False
 # 支持的算法列表 (包括确定性算法)
 SUPPORTED_ALGS = ['PPO', 'A2C', 'DQN']
 DETERMINISTIC_ALG_NAME = 'Deterministic' # 定义确定性算法的名称
+REPLAN_ALG_NAME = 'REPLAN'
 QMIX_ALG_NAME = 'QMIX' # 定义 QMIX 算法名称
 QTRAN_ALG_NAME = 'QTRAN' # 定义 QTRAN 算法名称
 
@@ -135,6 +137,18 @@ class UAVVisualizationApp:
         self.deterministic_input_json = None # 新增输入文件路径存储
         self.results[DETERMINISTIC_ALG_NAME] = None # 初始化确定性算法结果存储
 
+        # 任务重规划控制
+        replan_frame = ttk.LabelFrame(control_frame, text="任务重规划控制", padding="5")
+        replan_frame.grid(row=0, column=len(SUPPORTED_ALGS) + 4, padx=10)
+        ttk.Label(replan_frame, text="任务重规划:").grid(row=0, column=0, sticky=tk.W)
+        ttk.Button(replan_frame, text="运行任务重规划", command=self.run_replanning_inference).grid(row=1, column=0, pady=5)
+        ttk.Button(replan_frame, text="选择输入JSON", command=self.select_replanning_input_json).grid(row=1, column=1, pady=5,
+                                                                                            padx=5)
+        self.replan_input_label = ttk.Label(replan_frame, text="未选择输入文件", foreground="gray")  # 新增输入文件标签
+        self.replan_input_label.grid(row=3, column=0, columnspan=2)
+        self.replan_input_json = None  # 新增输入文件路径存储
+        self.results["REPLAN_ALG_NAME"] = None  # 初始化确定性算法结果存储
+
         # 标签页
         notebook = ttk.Notebook(main_frame)
         notebook.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -168,6 +182,11 @@ class UAVVisualizationApp:
         deterministic_tab = ttk.Frame(notebook, padding="10")
         notebook.add(deterministic_tab, text="确定性算法 结果")
         self.setup_deterministic_tab(deterministic_tab) # 新增设置标签页函数
+
+        # 任务重规划标签页
+        replan_tab = ttk.Frame(notebook, padding="10")
+        notebook.add(replan_tab, text="任务重规划 结果")
+        self.setup_replan_tab(replan_tab)  # 新增设置标签页函数
 
         # 对比标签页
         compare_tab = ttk.Frame(notebook, padding="10")
@@ -274,6 +293,55 @@ class UAVVisualizationApp:
         paned_window.add(viz_frame, weight=1)
         self.deterministic_fig_frame = ttk.Frame(viz_frame)
         self.deterministic_fig_frame.pack(fill=tk.BOTH, expand=True)
+
+    # def setup_replan_tab(self, parent): # 新增任务重规划算法标签页设置
+    #     paned_window = ttk.PanedWindow(parent, orient=tk.HORIZONTAL)
+    #     paned_window.pack(fill=tk.BOTH, expand=True)
+    #     json_frame = ttk.LabelFrame(paned_window, text="重规划输出")
+    #     paned_window.add(json_frame, weight=1)
+    #     self.replan_text = tk.Text(json_frame, wrap=tk.WORD, font=('Consolas', 10))
+    #     scrollbar = ttk.Scrollbar(json_frame, orient=tk.VERTICAL, command=self.replan_text.yview)
+    #     self.replan_text.configure(yscrollcommand=scrollbar.set)
+    #     self.replan_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    #     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    #     viz_frame = ttk.LabelFrame(paned_window, text="可视化")
+    #     paned_window.add(viz_frame, weight=1)
+    #     self.replan_fig_frame = ttk.Frame(viz_frame)
+    #     self.replan_fig_frame.pack(fill=tk.BOTH, expand=True)
+
+    def setup_replan_tab(self, parent):  # 新增任务重规划算法标签页设置
+        paned_window = ttk.PanedWindow(parent, orient=tk.HORIZONTAL)
+        paned_window.pack(fill=tk.BOTH, expand=True)
+        json_frame = ttk.LabelFrame(paned_window, text="重规划输出")
+        paned_window.add(json_frame, weight=1)
+        self.replan_text = tk.Text(json_frame, wrap=tk.WORD, font=('Consolas', 10))
+        # 修复滚动条绑定错误：应该是 self.replan_text.yview
+        scrollbar = ttk.Scrollbar(json_frame, orient=tk.VERTICAL, command=self.replan_text.yview)
+        self.replan_text.configure(yscrollcommand=scrollbar.set)
+        self.replan_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        viz_frame = ttk.LabelFrame(paned_window, text="可视化")
+        paned_window.add(viz_frame, weight=1)
+
+        # 创建一个框架用于放置按钮和图形
+        self.replan_control_frame = ttk.Frame(viz_frame)
+        self.replan_control_frame.pack(fill=tk.X, padx=5, pady=5)
+
+        # 添加翻页按钮
+        self.prev_button = ttk.Button(self.replan_control_frame, text="上一个", command=self.show_prev_plot)
+        self.prev_button.pack(side=tk.LEFT, padx=5)
+        self.next_button = ttk.Button(self.replan_control_frame, text="下一个", command=self.show_next_plot)
+        self.next_button.pack(side=tk.LEFT, padx=5)
+
+        # 创建一个框架用于放置图形
+        self.replan_fig_frame = ttk.Frame(viz_frame)
+        self.replan_fig_frame.pack(fill=tk.BOTH, expand=True)
+
+        # 初始化存储图形数据的变量
+        self.current_plot_index = 0
+        self.plot_data = []  # 存储每个场景的 result 数据 (包含 history, total_damage 等)
+        self.plot_canvases = []  # 存储每个场景的 FigureCanvasTkAgg 对象
 
     def setup_compare_tab(self, parent):
         compare_frame = ttk.Frame(parent)
@@ -485,7 +553,7 @@ class UAVVisualizationApp:
             ax = fig.add_subplot(111)
             ax.text(0.5, 0.5, '无步骤数据', ha='center', va='center', transform=ax.transAxes, fontsize=16)
             ax.set_title(f"{alg} 结果")
-        fig.tight_layout()
+        fig.subplots_adjust(left=0.08, right=0.95, top=0.92, bottom=0.10, hspace=0.35, wspace=0.25)
         canvas = FigureCanvasTkAgg(fig, frame)
         canvas.draw()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -582,7 +650,7 @@ class UAVVisualizationApp:
             ax = fig.add_subplot(111)
             ax.text(0.5, 0.5, '无数据可显示\n请先运行 QMIX 推理或加载结果文件', ha='center', va='center', transform=ax.transAxes, fontsize=14)
             ax.set_title("QMIX 结果")
-            fig.tight_layout()
+            fig.subplots_adjust(left=0.08, right=0.95, top=0.92, bottom=0.10, hspace=0.35, wspace=0.25)
             canvas = FigureCanvasTkAgg(fig, frame)
             canvas.draw()
             canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -682,7 +750,7 @@ class UAVVisualizationApp:
             ax = fig.add_subplot(111)
             ax.text(0.5, 0.5, '无数据可显示\n请先运行 QTRAN 推理或加载结果文件', ha='center', va='center', transform=ax.transAxes, fontsize=14)
             ax.set_title("QTRAN 结果")
-            fig.tight_layout()
+            fig.subplots_adjust(left=0.08, right=0.95, top=0.92, bottom=0.10, hspace=0.35, wspace=0.25)
             canvas = FigureCanvasTkAgg(fig, frame)
             canvas.draw()
             canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -700,6 +768,17 @@ class UAVVisualizationApp:
             self.deterministic_input_json = file_path
             filename = os.path.basename(file_path)
             self.deterministic_input_label.config(text=f"输入文件: {filename}", foreground="green")
+
+    # --- Deterministic Algorithm Functions (New) ---
+    def select_replanning_input_json(self):  # 新增选择确定性算法输入文件
+        file_path = filedialog.askopenfilename(
+            title="选择任务重规划算法输入JSON文件",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+        )
+        if file_path:
+            self.replan_input_json = file_path
+            filename = os.path.basename(file_path)
+            self.replan_input_label.config(text=f"输入文件: {filename}", foreground="green")
 
     def run_deterministic_inference(self): # 新增运行确定性算法推理
         def run():
@@ -735,6 +814,466 @@ class UAVVisualizationApp:
             messagebox.showerror("错误", "找不到确定性算法推理脚本: infer/deterministic.py")
             return
         threading.Thread(target=run, daemon=True).start()
+
+    def run_replanning_inference(self):  # 新增运行任务重规划算法推理
+        def run():
+            try:
+                if not self.replan_input_json:
+                    messagebox.showwarning("警告", "请先选择确定性算法的输入JSON文件")
+                    return
+
+                # 生成带时间戳的唯一输出文件名
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                output_filename = f"replan_init_allocation_output_{timestamp}.json"
+                output_scene1 = f"replan_scene1_failure_allocation_output_{timestamp}.json"
+                output_scene2 = f"replan_scene2_transfer_allocation_output_{timestamp}.json"
+                output_scene3 = f"replan_scene3_transfer_allocation_output_{timestamp}.json"
+                output_path = os.path.join(os.getcwd(), "outputs_json", "replanning", output_filename)
+                output_path_scene1 = os.path.join(os.getcwd(), "outputs_json", "replanning", output_scene1)
+                output_path_scene2 = os.path.join(os.getcwd(), "outputs_json", "replanning", output_scene2)
+                output_path_scene3 = os.path.join(os.getcwd(), "outputs_json", "replanning", output_scene3)
+
+                cmd = [
+                    sys.executable, 'infer/Main_error.py',
+                    '--input_json', self.replan_input_json,
+                    '--output_json', output_path,
+                    '--output_scene1', output_path_scene1,
+                    '--output_scene2', output_path_scene2,
+                    '--output_scene3', output_path_scene3
+                ]
+
+                # 清空之前的输出
+                self.replan_text.delete(1.0, tk.END)
+                self.log(f"运行任务重规划算法推理: {' '.join(cmd)}")
+
+                # 捕获子进程的输出
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    encoding='utf-8',
+                    cwd=os.getcwd(),
+                    bufsize=1,
+                    universal_newlines=True
+                )
+
+
+                # 实时读取输出
+                while True:
+                    output = process.stdout.readline()
+                    if output == '' and process.poll() is not None:
+                        break
+                    if output:
+                        # 将输出添加到文本框
+                        self.replan_text.insert(tk.END, output)
+                        self.replan_text.see(tk.END)  # 滚动到最新内容
+                        self.replan_text.update()  # 刷新界面
+
+                # 读取错误输出
+                stderr_output = process.stderr.read()
+                if stderr_output:
+                    self.replan_text.insert(tk.END, f"\n错误输出:\n{stderr_output}")
+                    self.replan_text.see(tk.END)
+                    self.replan_text.update()
+
+                return_code = process.poll()
+
+                if return_code == 0:
+                    self.log("任务重规划算法推理完成！")
+                    messagebox.showinfo("成功", f"任务重规划算法推理完成！输出文件: {output_filename}")
+                    self.prepare_replan_plots_and_show_first(output_path, output_path_scene1, output_path_scene2, output_path_scene3)
+                else:
+                    error_msg = f"任务重规划算法推理失败，返回码: {return_code}"
+                    self.log(error_msg)
+                    messagebox.showerror("错误", error_msg)
+
+            except Exception as e:
+                error_msg = f"运行任务重规划算法推理时出错: {str(e)}"
+                self.log(error_msg)
+                messagebox.showerror("错误", error_msg)
+
+        if not os.path.exists('infer/deterministic.py'):
+            messagebox.showerror("错误", "找不到任务重规划算法推理脚本: infer/Main_error.py")
+            return
+        threading.Thread(target=run, daemon=True).start()
+
+    def prepare_replan_plots_and_show_first(self, output_path, output_path_scene1, output_path_scene2,
+                                            output_path_scene3):
+        """
+        读取所有场景的JSON文件，提取 algorithm_result 数据，并为每个场景创建图形。
+        然后显示第一个图形。
+        """
+        try:
+            # 清空之前的数据和图形
+            self.plot_data = []
+            self.plot_canvases = []
+            self.current_plot_index = 0
+            self.plot_scenario_names = []  # 新增：存储场景名称
+
+            # 清空可视化框架内容
+            for widget in self.replan_fig_frame.winfo_children():
+                widget.destroy()
+
+            # 定义文件路径和对应场景名称
+            file_paths = [
+                (output_path, "初始场景"),
+                (output_path_scene1, "双机场故障场景"),
+                (output_path_scene2, "双集群转移场景"),
+                (output_path_scene3, "通信干扰场景")
+            ]
+
+            # 读取数据并创建图形
+            for path, name in file_paths:
+                if not os.path.exists(path):
+                    print(f"警告: 文件不存在 {path}")
+                    self.plot_data.append(None)  # 为缺失文件添加 None
+                    self.plot_scenario_names.append(name)  # 添加名称
+                    continue
+
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+
+                    # 尝试从 JSON 顶层获取 algorithm_result 和 scenario_overview
+                    algo_result = data.get('algorithm_result')
+                    scenario_name_from_json = data.get('scenario_overview', name)  # 优先使用JSON中的名称，否则使用默认名称
+
+                    if not algo_result:
+                        print(f"警告: {name} 中未找到 'algorithm_result' 数据。")
+                        self.plot_data.append(None)  # 为缺失数据添加 None
+                        self.plot_scenario_names.append(scenario_name_from_json)  # 添加名称
+                        continue
+
+                    self.plot_data.append(algo_result)  # 存储 result 数据
+                    self.plot_scenario_names.append(scenario_name_from_json)  # 添加名称
+
+                except json.JSONDecodeError:
+                    print(f"错误: {name} 文件格式不是有效的JSON: {path}")
+                    self.plot_data.append(None)  # 为错误文件添加 None
+                    self.plot_scenario_names.append(name)  # 添加名称
+                    continue
+                except Exception as e:
+                    print(f"处理 {name} 时出错: {e}")
+                    self.plot_data.append(None)  # 为错误文件添加 None
+                    self.plot_scenario_names.append(name)  # 添加名称
+                    continue
+
+            # 为每个有效的 result 数据创建图形并存储 canvas
+            for i, result_data in enumerate(self.plot_data):
+                scenario_name = self.plot_scenario_names[i]  # 获取对应的场景名
+                if result_data is not None:
+                    fig = self.create_single_plot(result_data, scenario_name)  # <--- 传入场景名
+                    canvas = FigureCanvasTkAgg(fig, master=self.replan_fig_frame)
+                    canvas.draw()
+                    self.plot_canvases.append(canvas)
+                else:
+                    # 如果数据无效，创建一个提示图形
+                    fig, ax = plt.subplots(figsize=(12, 8))
+                    ax.text(0.5, 0.5, f'无法加载图形\n{scenario_name}\n数据缺失或无效', horizontalalignment='center',
+                            verticalalignment='center', transform=ax.transAxes, fontsize=14, color='red')
+                    ax.set_title('加载失败')
+                    ax.axis('off')  # 隐藏坐标轴
+                    plt.tight_layout()
+                    canvas = FigureCanvasTkAgg(fig, master=self.replan_fig_frame)
+                    canvas.draw()
+                    self.plot_canvases.append(canvas)
+
+            # 显示第一个图形（如果有的话）
+            if self.plot_canvases:
+                self.show_plot_at_index(0)
+                # 更新按钮状态
+                self.update_navigation_buttons()
+            else:
+                # 如果没有有效图形，显示提示
+                label = tk.Label(self.replan_fig_frame, text="没有可加载的图形数据", font=("Arial", 14))
+                label.pack(expand=True)
+
+        except Exception as e:
+            print(f"准备可视化数据时出错: {e}")
+            # 如果出错，至少在GUI中显示错误信息
+            for widget in self.replan_fig_frame.winfo_children():
+                widget.destroy()
+            error_label = tk.Label(self.replan_fig_frame, text=f"准备可视化数据出错: {e}", fg="red")
+            error_label.pack()
+
+    def create_single_plot(self, result_data, scenario_name="Scenario"):  # <--- 新增 scenario_name 参数
+        """
+        根据一个 result 数据 (包含 history, total_damage 等) 创建一个完整的 matplotlib figure。
+        这个函数模拟 Main_error.py 中的 plot_results 函数。
+        """
+        # 提取数据
+        history = result_data.get('history', [])
+        total_damage = result_data.get('total_damage')
+        # 尝试从 result_data 获取 S, L, K 用于目标线绘制 (如果 Main_error.py 修改后保存了这些值)
+        # 这里先假设它们在 result_data 的顶层，你需要在 Main_error.py 的 generate_drone_allocation_json 中也保存这些值
+        S = result_data.get('S')  # 需要 Main_error.py 保存
+        L = result_data.get('L')  # 需要 Main_error.py 保存
+        K = result_data.get('K', 5)  # 假设 K=5 或从 result_data 获取
+
+        if not history:
+            # 如果没有历史数据，创建一个空图或提示图
+            fig, ax = plt.subplots(figsize=(14, 10))
+            ax.text(0.5, 0.5, '历史数据缺失', horizontalalignment='center', verticalalignment='center',
+                    transform=ax.transAxes, fontsize=14)
+            ax.set_title('绘图失败')
+            ax.axis('off')
+            return fig
+
+        iters = [h['iter'] for h in history]
+        lambda_s_vals = [h['lambda_s'] for h in history]
+        lambda_l_vals = [h['lambda_l'] for h in history]
+        sum_s_vals = [h['sum_s'] for h in history]
+        sum_l_vals = [h['sum_l'] for h in history]
+        dual_vals = [h['dual_value'] for h in history]
+
+        # 创建 figure 和 4 个子图
+        fig, axs = plt.subplots(2, 2, figsize=(14, 10))
+
+        # --- 为每个子图添加内容 ---
+        # 1. 拉格朗日乘子收敛
+        axs[0, 0].plot(iters, lambda_s_vals, 'b-', linewidth=2, label='λ_s')
+        axs[0, 0].plot(iters, lambda_l_vals, 'g-', linewidth=2, label='λ_l')
+        axs[0, 0].set_xlabel('Iteration', fontsize=11)
+        axs[0, 0].set_ylabel('Lagrangian Multipliers', fontsize=11)
+        axs[0, 0].set_title('Dual Multipliers Convergence', fontsize=12, fontweight='bold')
+        axs[0, 0].legend(fontsize=10)
+        axs[0, 0].grid(True, alpha=0.3)
+
+        # 2. 侦察机分配收敛
+        axs[0, 1].plot(iters, sum_s_vals, 'b-', linewidth=2, label='Actual Allocation')
+        # 使用从 result_data 获取的 S 和 K，或者使用历史数据中的目标值
+        if S is not None:
+            target_s = S - K
+            axs[0, 1].axhline(y=target_s, color='r', linestyle='--', linewidth=2, label=f'Target ({target_s})')
+        else:
+            # 如果 S 未保存，使用历史数据中的最大值作为近似目标
+            target_s = max(sum_s_vals) if sum_s_vals else 0
+            axs[0, 1].axhline(y=target_s, color='r', linestyle='--', linewidth=2, label=f'Target (~{target_s:.2f})')
+        axs[0, 1].set_xlabel('Iteration', fontsize=11)
+        axs[0, 1].set_ylabel('Scouts (Transformed)', fontsize=11)
+        axs[0, 1].set_title('Scout Allocation Convergence', fontsize=12, fontweight='bold')
+        axs[0, 1].legend(fontsize=10)
+        axs[0, 1].grid(True, alpha=0.3)
+
+        # 3. 拦截机分配收敛
+        axs[1, 0].plot(iters, sum_l_vals, 'g-', linewidth=2, label='Actual Allocation')
+        if L is not None:
+            target_l = L - K
+            axs[1, 0].axhline(y=target_l, color='r', linestyle='--', linewidth=2, label=f'Target ({target_l})')
+        else:
+            target_l = max(sum_l_vals) if sum_l_vals else 0
+            axs[1, 0].axhline(y=target_l, color='r', linestyle='--', linewidth=2, label=f'Target (~{target_l:.2f})')
+        axs[1, 0].set_xlabel('Iteration', fontsize=11)
+        axs[1, 0].set_ylabel('Interceptors (Transformed)', fontsize=11)
+        axs[1, 0].set_title('Interceptor Allocation Convergence', fontsize=12, fontweight='bold')
+        axs[1, 0].legend(fontsize=10)
+        axs[1, 0].grid(True, alpha=0.3)
+
+        # 4. 目标函数收敛
+        axs[1, 1].plot(iters, dual_vals, 'k-', linewidth=2, label='Dual Value')
+        if total_damage is not None:
+            axs[1, 1].axhline(y=total_damage, color='darkred', linestyle=':', linewidth=2,
+                              label=f'Primal Value ({total_damage:.4f})')
+        axs[1, 1].set_xlabel('Iteration', fontsize=11)
+        axs[1, 1].set_ylabel('Objective Function Value', fontsize=11)
+        axs[1, 1].set_title('Objective Function', fontsize=12, fontweight='bold')
+        axs[1, 1].legend(fontsize=10)
+        axs[1, 1].grid(True, alpha=0.3)
+
+        # --- 调整布局 ---
+        # 1. 添加总标题 (suptitle)
+        fig.suptitle(scenario_name, fontsize=16, fontweight='bold', y=0.98)  # <--- 使用传入的场景名
+
+        # 2. 调整子图间距，避免标题遮挡
+        plt.tight_layout()
+        # 3. 为 suptitle 预留空间，或者增加子图之间的垂直间距
+        plt.subplots_adjust(top=0.92, hspace=0.3, wspace=0.2, bottom=0.1)  # <--- 增加 top 空间，增加 hspace 和 wspace
+
+        return fig
+
+    def show_plot_at_index(self, index):
+        """
+        显示指定索引的图形。
+        """
+        if 0 <= index < len(self.plot_canvases):
+            # 隐藏当前显示的 canvas
+            for canvas in self.plot_canvases:
+                canvas.get_tk_widget().pack_forget()
+
+            # 显示指定索引的 canvas
+            canvas_to_show = self.plot_canvases[index]
+            canvas_to_show.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+            self.current_plot_index = index
+            # 更新按钮状态
+            self.update_navigation_buttons()
+
+    def show_next_plot(self):
+        """
+        显示下一个图形。
+        """
+        next_index = self.current_plot_index + 1
+        if next_index < len(self.plot_canvases):
+            self.show_plot_at_index(next_index)
+
+    def show_prev_plot(self):
+        """
+        显示上一个图形。
+        """
+        prev_index = self.current_plot_index - 1
+        if prev_index >= 0:
+            self.show_plot_at_index(prev_index)
+
+    def update_navigation_buttons(self):
+        """
+        根据当前索引更新按钮的可用状态。
+        """
+        # 上一个按钮
+        if self.current_plot_index <= 0:
+            self.prev_button.config(state='disabled')
+        else:
+            self.prev_button.config(state='normal')
+
+        # 下一个按钮
+        if self.current_plot_index >= len(self.plot_canvases) - 1:
+            self.next_button.config(state='disabled')
+        else:
+            self.next_button.config(state='normal')
+
+    def plot_replan_results_in_frame(self, output_path, output_path_scene1, output_path_scene2, output_path_scene3):
+        """
+        从生成的JSON文件中读取数据，并在GUI的viz_frame中绘制图形。
+        读取每个场景JSON顶层的 algorithm_result 中的 history 和 total_damage 信息。
+        """
+        try:
+            # 清空之前的可视化内容
+            for widget in self.replan_fig_frame.winfo_children():
+                widget.destroy()
+
+            # 定义文件路径和对应场景名称
+            file_paths = [
+                (output_path, "初始场景"),
+                (output_path_scene1, "双机场故障场景"),
+                (output_path_scene2, "双集群转移场景"),
+                (output_path_scene3, "通信干扰场景")
+            ]
+
+            # 准备画布，用于绘制4个场景的收敛图
+            fig, axes = plt.subplots(2, 2, figsize=(14, 10))  # 创建2x2的子图
+            axes = axes.flatten()  # 将2D数组展平为1D，方便索引
+
+            plot_idx = 0
+            for path, name in file_paths:
+                ax = axes[plot_idx]  # 当前场景对应的子图
+
+                if not os.path.exists(path):
+                    print(f"警告: 文件不存在 {path}")
+                    ax.text(0.5, 0.5, f'文件未找到:\n{path}', horizontalalignment='center', verticalalignment='center',
+                            transform=ax.transAxes, fontsize=10, color='red')
+                    ax.set_title(f'{name} (文件缺失)')
+                    ax.set_xlim(0, 1)
+                    ax.set_ylim(0, 1)
+                    plot_idx += 1
+                    continue
+
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+
+                    # 尝试从 JSON 顶层获取 algorithm_result
+                    algo_result = data.get('algorithm_result')
+                    if not algo_result:
+                        print(f"警告: {name} 中未找到 'algorithm_result' 数据。")
+                        ax.text(0.5, 0.5, f'算法结果缺失:\n{path}', horizontalalignment='center', verticalalignment='center',
+                                transform=ax.transAxes, fontsize=10, color='red')
+                        ax.set_title(f'{name} (结果缺失)')
+                        ax.set_xlim(0, 1)
+                        ax.set_ylim(0, 1)
+                        plot_idx += 1
+                        continue
+
+                    history = algo_result.get('history')
+                    total_damage = algo_result.get('total_damage')
+
+                    if not history:
+                        print(f"警告: {name} 中未找到 'history' 数据。")
+                        ax.text(0.5, 0.5, f'历史数据缺失:\n{path}', horizontalalignment='center', verticalalignment='center',
+                                transform=ax.transAxes, fontsize=10, color='red')
+                        ax.set_title(f'{name} (历史数据缺失)')
+                        ax.set_xlim(0, 1)
+                        ax.set_ylim(0, 1)
+                        plot_idx += 1
+                        continue
+
+                    # --- 绘制迭代收敛图 (参考 Main_error.py 的 plot_results) ---
+                    iters = [h['iter'] for h in history]
+                    lambda_s_vals = [h['lambda_s'] for h in history]
+                    lambda_l_vals = [h['lambda_l'] for h in history]
+                    sum_s_vals = [h['sum_s'] for h in history]
+                    sum_l_vals = [h['sum_l'] for h in history]
+                    dual_vals = [h['dual_value'] for h in history]
+
+                    # 1. 拉格朗日乘子收敛
+                    ax_twin1 = ax.twinx()  # 创建共享x轴的第二个y轴
+                    ax.plot(iters, lambda_s_vals, 'b-', linewidth=1, label='λ_s (左轴)', alpha=0.7)
+                    ax_twin1.plot(iters, lambda_l_vals, 'g-', linewidth=1, label='λ_l (右轴)', alpha=0.7)
+                    ax.set_xlabel('Iteration')
+                    ax.set_ylabel('λ_s', color='b')
+                    ax_twin1.set_ylabel('λ_l', color='g')
+                    ax.set_title(f'{name} - Dual Multipliers')
+                    ax.grid(True, alpha=0.3)
+                    # 合并图例
+                    lines1, labels1 = ax.get_legend_handles_labels()
+                    lines2, labels2 = ax_twin1.get_legend_handles_labels()
+                    ax.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+
+                    # 如果你想绘制 Main_error.py 中 plot_results 的其他子图，
+                    # 你需要创建新的 figure 或者调整子图布局。
+                    # 这里我们只绘制一个代表性的收敛图（拉格朗日乘子）。
+                    # 如果你想在一个 figure 里画 Main_error.py 那样的 4 个小图，
+                    # 你需要为 *每个* 场景创建 *一个* 新的 figure。
+
+                    # 为下一个场景准备
+                    plot_idx += 1
+
+                except json.JSONDecodeError:
+                    print(f"错误: {name} 文件格式不是有效的JSON: {path}")
+                    ax.text(0.5, 0.5, f'JSON格式错误:\n{path}', horizontalalignment='center', verticalalignment='center',
+                            transform=ax.transAxes, fontsize=10, color='red')
+                    ax.set_title(f'{name} (JSON错误)')
+                    ax.set_xlim(0, 1)
+                    ax.set_ylim(0, 1)
+                    plot_idx += 1
+                    continue
+                except Exception as e:
+                    print(f"处理 {name} 时出错: {e}")
+                    ax.text(0.5, 0.5, f'处理错误:\n{str(e)}', horizontalalignment='center', verticalalignment='center',
+                            transform=ax.transAxes, fontsize=10, color='red')
+                    ax.set_title(f'{name} (错误)')
+                    ax.set_xlim(0, 1)
+                    ax.set_ylim(0, 1)
+                    plot_idx += 1
+                    continue
+
+            plt.tight_layout()  # 确保子图之间不重叠
+
+            # 将matplotlib figure嵌入到tkinter Frame中
+            canvas = FigureCanvasTkAgg(fig, master=self.replan_fig_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+            # 可选：添加工具栏
+            # toolbar = NavigationToolbar2Tk(canvas, self.replan_fig_frame)
+            # toolbar.update()
+            # canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        except Exception as e:
+            print(f"在GUI中绘制可视化时出错: {e}")
+            # 如果出错，至少在GUI中显示错误信息
+            for widget in self.replan_fig_frame.winfo_children():
+                widget.destroy()
+            error_label = tk.Label(self.replan_fig_frame, text=f"可视化出错: {e}", fg="red")
+            error_label.pack()
 
     def find_and_load_latest_deterministic_result(self): # 新增查找最新确定性算法结果 (可选调用)
          try:
@@ -777,7 +1316,7 @@ class UAVVisualizationApp:
             ax = fig.add_subplot(111)
             ax.text(0.5, 0.5, '无数据可显示\n请先运行确定性算法推理或加载结果文件', ha='center', va='center', transform=ax.transAxes, fontsize=14)
             ax.set_title("确定性算法结果")
-            fig.tight_layout()
+            fig.subplots_adjust(left=0.08, right=0.95, top=0.92, bottom=0.10, hspace=0.35, wspace=0.25)
             canvas = FigureCanvasTkAgg(fig, frame)
             canvas.draw()
             canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -862,7 +1401,7 @@ class UAVVisualizationApp:
             ax = fig.add_subplot(111)
             ax.text(0.5, 0.5, '无步骤数据', ha='center', va='center', transform=ax.transAxes, fontsize=16)
             ax.set_title("确定性算法 结果")
-        fig.tight_layout()
+        fig.subplots_adjust(left=0.08, right=0.95, top=0.92, bottom=0.10, hspace=0.35, wspace=0.25)
         canvas = FigureCanvasTkAgg(fig, frame)
         canvas.draw()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -1225,7 +1764,7 @@ class UAVVisualizationApp:
             ax.text(0.5, 0.5, '无步骤数据', ha='center', va='center', transform=ax.transAxes, fontsize=16)
             ax.set_title(f"{title_prefix} 结果")
 
-        fig.tight_layout()
+        fig.subplots_adjust(left=0.08, right=0.95, top=0.92, bottom=0.10, hspace=0.35, wspace=0.25)
         canvas = FigureCanvasTkAgg(fig, frame)
         canvas.draw()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)

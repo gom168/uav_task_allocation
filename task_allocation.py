@@ -843,7 +843,7 @@ if __name__ == '__main__':
         red_base_rect=my_red_base,
         blue_base_rect=my_blue_base,
         render_mode=True,  # Enable rendering
-        background_image_path='figure/背景.png',
+        background_image_path='figure/背景_new.png',
         red_interceptor_image_path='figure/红.png',
         red_recon_image_path='figure/红3.png',
         red_escort_image_path='figure/红2.png',
